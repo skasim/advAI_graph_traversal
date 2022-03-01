@@ -457,12 +457,14 @@ board3_2 = [
 assert is_first_move(i=1, j=0, matrix=board3_2, symbol=1) == False
 
 
-# In[25]:
+# In[21]:
 
 
 @snoop
 def eval_attacker_3x3(i, j, matrix):
     exploit_file = "exploit_3x3"
+    if not os.path.isfile(f"io/{exploit_file}.txt"):
+        write_file(exploit_file, "")
     symbol=1
     if is_first_move(i, j, matrix, symbol=symbol):
         # save scanned ports to a list
@@ -470,35 +472,33 @@ def eval_attacker_3x3(i, j, matrix):
     if not eval_attacker_move(i, j, matrix, num_neighbors=1, symbol=symbol):
         return "NOP"
     if eval_attacker_move(i, j, matrix, num_neighbors=2, symbol=symbol):
-        try:
-            if read_file(exploit_file) == "exploit initiated":
-                return "run exploit -- game over, attacker wins!"
-        except FileNotFoundError:
-            return "use exploit and set parameters, run exploit -- game over, attacker wins!"
+        if read_file(exploit_file) == "exploit initiated":
+            return "run exploit -- game over, attacker wins!"
+        return "exploit initiated and parameters set, run exploit -- game over, attacker wins!"
     if check_move_made_inbetween_two_moves(i, j, matrix, symbol):
-        try:
-            if read_file(exploit_file) == "exploit initiated":
-                return "run exploit -- game over, attacker wins!"
-        except FileNotFoundError:
-            return "use exploit and set parameters, run exploit -- game over, attacker wins!"
+        if read_file(exploit_file) == "exploit initiated":
+            return "run exploit -- game over, attacker wins!"
+        return "exploit initiated and parameters, run exploit -- game over, attacker wins!"
     if eval_attacker_move(i, j, matrix, num_neighbors=1, symbol=symbol):
-        try:
-            if read_file(exploit_file) == "exploit initiated":
-                return "NOP -- exploit already in progress"
-        except FileNotFoundError:
-            write_file(exploit_file, "exploit initiated")
-            # retrieve command based on port from a list of ports and command from db of commands
-            return "use exploit and set parameters"
+        if read_file(exploit_file) == "exploit initiated":
+            return "NOP -- exploit already in progress"
+        write_file(exploit_file, "exploit initiated")
+        # retrieve command based on port from a list of ports and command from db of commands
+        return "exploit initiated and parameters set"
     return "NOP"
 
 
-# In[36]:
+# In[22]:
 
 
 @snoop
 def eval_attacker_5x5(i, j, matrix):
     exploit_file = "exploit_5x5"
     set_file = "set_5x5"
+    if not os.path.isfile(f"io/{exploit_file}.txt"):
+        write_file(exploit_file, "")
+    if not os.path.isfile(f"io/{set_file}.txt"):
+        write_file(set_file, "")
     symbol=1
     if is_first_move(i, j, matrix, symbol=symbol):
         # save scanned ports to a list
@@ -506,54 +506,40 @@ def eval_attacker_5x5(i, j, matrix):
     if not eval_attacker_move(i, j, matrix, num_neighbors=1, symbol=symbol):
         return "NOP"
     if eval_attacker_move(i, j, matrix, num_neighbors=3, symbol=symbol):
-        try:
-            if read_file(set_file) == "parameters set":
-                return "run exploit -- game over, attacker wins!"
-        except FileNotFoundError:
-            return "set parameters, run exploit -- game over, attacker wins!"
+        if read_file(set_file) == "parameters set":
+            return "run exploit -- game over, attacker wins!"
+        return "set parameters, run exploit -- game over, attacker wins!"
     if check_move_made_inbetween_three_moves(i, j, matrix, symbol):
-        try:
-            if read_file(set_file) == "parameters set":
-                return "run exploit -- game over, attacker wins!"
-        except FileNotFoundError:
-            return "set parameters, run exploit -- game over, attacker wins!"
+        if read_file(set_file) == "parameters set":
+            return "run exploit -- game over, attacker wins!"
+        return "set parameters, run exploit -- game over, attacker wins!"
     if eval_attacker_move(i, j, matrix, num_neighbors=2, symbol=symbol):
-        try:
-            if read_file(exploit_file) == "exploit initiated":
-                try:
-                    if read_file(set_file) == "parameter set":
-                        return "NOP -- parameters already set"
-                except FileNotFoundError:
-                    write_file(set_file, "parameters set")
-                    return "parameters set"
-        except FileNotFoundError:
-            write_file(exploit_file, "exploit initiated")
+        if read_file(exploit_file) == "exploit initiated":
+            if read_file(set_file) == "parameter set":
+                return "NOP -- parameters already set"
             write_file(set_file, "parameters set")
-            return "init exploit, parameters set"
+            return "parameters set"
+        write_file(exploit_file, "exploit initiated")
+        write_file(set_file, "parameters set")
+        return "init exploit, parameters set"
     if check_move_made_inbetween_two_moves(i, j, matrix, symbol):
-        try:
-            if read_file(exploit_file) == "exploit initiated":
-                try:
-                    if read_file(set_file) == "parameter set":
-                        return "NOP -- parameters already set"
-                except FileNotFoundError:
-                    write_file(set_file, "parameters set")
-                    return "parameters set"
-        except FileNotFoundError:
-            write_file(exploit_file, "exploit initiated")
+        if read_file(exploit_file) == "exploit initiated":
+            if read_file(set_file) == "parameter set":
+                return "NOP -- parameters already set"
             write_file(set_file, "parameters set")
-            return "init exploit, parameters set"
+            return "parameters set"
+        write_file(exploit_file, "exploit initiated")
+        write_file(set_file, "parameters set")
+        return "init exploit, parameters set"
     if eval_attacker_move(i, j, matrix, num_neighbors=1, symbol=symbol):
-        try:
-            if read_file(exploit_file) == "exploit initiated":
-                return "NOP -- exploit already in progress"
-        except FileNotFoundError:
-            write_file(exploit_file, "exploit initiated")
-            return "use command to commence exploit"
+        if read_file(exploit_file) == "exploit initiated":
+            return "NOP -- exploit already in progress"
+        write_file(exploit_file, "exploit initiated")
+        return "exploit initiated"
     return "NOP"
 
 
-# In[46]:
+# In[25]:
 
 
 @snoop
@@ -573,36 +559,21 @@ def eval_move(prev_state, current_state):
 
 board_old = [
     [ 0,  0,  0,  0,  0],
-    [ 0,  0,  1,  0,  0],
+    [ 0,  0,  0,  0,  0],
     [ 0,  0,  1,  0,  0],
     [ 0,  0,  0,  0,  0],
-    [ 0,  1,  1,  1,  0]]
+    [ 0,  0,  0,  0,  0]]
 board_new = [
     [ 0,  0,  0,  0,  0],
+    [ 0,  0,  0,  0,  0],
     [ 0,  0,  1,  0,  0],
     [ 0,  0,  1,  0,  0],
-    [ 0,  0,  1,  0,  0],
-    [ 0,  1,  1,  1,  0]]
+    [ 0,  0,  0,  0,  0]]
 eval_move(board_old, board_new)
 
 
-# In[42]:
+# In[26]:
 
-
-@snoop
-def eval_move(prev_state, current_state):
-    move = get_latest_move(prev_state, current_state)
-    i = move[0]
-    j = move[1]
-    if current_state[i][j] == 1: # attacker
-        if len(current_state) == 3:
-            return eval_attacker_3x3(i, j, current_state)
-        if len(current_state) == 5:
-            return eval_attacker_5x5(i, j, current_state)
-    elif current_state[i][j] == 2: # defender
-        return "defender moves go here..."
-    else:
-        return "something has gone terribly wrong" # ruh roh
 
 board_old = [
     [1, 0, 1],
@@ -621,7 +592,7 @@ eval_move(board_old, board_new)
 
 
 
-# In[24]:
+# In[ ]:
 
 
 import itertools
